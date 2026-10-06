@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:webspark_test_task/core/network/api_service.dart';
 import 'package:webspark_test_task/features/calculation/models/calculation_result.dart';
 import 'package:webspark_test_task/features/calculation/services/path_calculator.dart';
 import 'package:webspark_test_task/features/url_input/models/path_task.dart';
@@ -25,7 +26,9 @@ class _CalculationScreenState extends State<CalculationScreen> {
   final List<CalculationResult> _results = [];
 
   bool _isCalculated = false;
+  bool _isSending = false;
 
+  final _apiService = ApiService();
   final _pathCalculator = PathCalculator();
 
   String? _calculationError;
@@ -71,6 +74,34 @@ class _CalculationScreenState extends State<CalculationScreen> {
     }
   }
 
+  Future<void> _sendResults() async {
+    setState(() {
+      _isSending = true;
+    });
+
+    try {
+      await _apiService.sendResults(widget.apiUrl, _results);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Results sent successfully')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to send results: $e')));
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSending = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -95,7 +126,8 @@ class _CalculationScreenState extends State<CalculationScreen> {
               else ...[
                 if (_isCalculated) ...[
                   const Text(
-                    'All calculations have finished',
+                    'All calculations have finished, '
+                    'you can send your results to server',
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
@@ -134,6 +166,27 @@ class _CalculationScreenState extends State<CalculationScreen> {
                     ],
                   ),
                 ),
+
+                if (_isCalculated) ...[
+                  const SizedBox(height: 32),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                    ),
+                    onPressed: _isSending ? null : _sendResults,
+                    child: _isSending
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.blue,
+                            ),
+                          )
+                        : const Text('Send results to server'),
+                  ),
+                ],
               ],
             ],
           ),
