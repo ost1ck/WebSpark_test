@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:webspark_test_task/core/network/api_service.dart';
+import 'package:webspark_test_task/core/exceptions/api_exception.dart';
 
 class UrlInputScreen extends StatefulWidget {
   const UrlInputScreen({super.key});
@@ -9,7 +11,9 @@ class UrlInputScreen extends StatefulWidget {
 
 class _UrlInputScreenState extends State<UrlInputScreen> {
   final _apiController = TextEditingController();
+  bool _isLoading = false;
   String? _errorMessage;
+  final _apiService = ApiService();
 
   @override
   void dispose() {
@@ -65,6 +69,7 @@ class _UrlInputScreenState extends State<UrlInputScreen> {
             Padding(
               padding: const EdgeInsets.all(12.0),
               child: TextField(
+                enabled: !_isLoading,
                 controller: _apiController,
                 keyboardType: TextInputType.url,
                 decoration: InputDecoration(
@@ -89,20 +94,50 @@ class _UrlInputScreenState extends State<UrlInputScreen> {
                     backgroundColor: Colors.blue,
                     foregroundColor: Colors.white,
                   ),
-                  onPressed: () {
-                    final url = _apiController.text.trim();
-                    if (!_isValidUrl(url)) {
-                      setState(() {
-                        _errorMessage = 'Invalid URL';
-                      });
-                      return;
-                    }
-                    setState(() {
-                      _errorMessage = null;
-                      _apiController.text = url;
-                    });
-                  },
-                  child: const Text('Start'),
+                  onPressed: _isLoading
+                      ? null
+                      : () async {
+                          if (!_isValidUrl(_apiController.text)) {
+                            setState(() {
+                              _errorMessage = 'Invalid URL';
+                            });
+                            return;
+                          }
+
+                          setState(() {
+                            _errorMessage = null;
+                            _isLoading = true;
+                          });
+
+                          try {
+                            final response = await _apiService.getTasks(
+                              _apiController.text.trim(),
+                            );
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(this.context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Received ${response.data.length} tasks',
+                                ),
+                              ),
+                            );
+                          } on ApiException catch (e) {
+                            if (!mounted) return;
+
+                            setState(() {
+                              _errorMessage = e.toString();
+                            });
+                          } finally {
+                            if (mounted) {
+                              setState(() {
+                                _isLoading = false;
+                              });
+                            }
+                          }
+                        },
+                  child: _isLoading
+                      ? CircularProgressIndicator(color: Colors.blue)
+                      : Text('Start'),
                 ),
               ),
             ),
