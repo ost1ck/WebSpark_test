@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:webspark_test_task/features/calculation/presentation/calculation_screen.dart';
 import 'package:webspark_test_task/core/network/api_service.dart';
 import 'package:webspark_test_task/core/exceptions/api_exception.dart';
 
@@ -114,10 +115,12 @@ class _UrlInputScreenState extends State<UrlInputScreen> {
                               _apiController.text.trim(),
                             );
                             if (!mounted) return;
-                            ScaffoldMessenger.of(this.context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  'Received ${response.data.length} tasks',
+                            Navigator.push(
+                              this.context,
+                              MaterialPageRoute(
+                                builder: (context) => CalculationScreen(
+                                  tasks: response.data,
+                                  apiUrl: _apiController.text.trim(),
                                 ),
                               ),
                             );
