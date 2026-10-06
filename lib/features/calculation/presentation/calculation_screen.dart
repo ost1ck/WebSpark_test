@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:webspark_test_task/features/results/presentation/result_screen.dart';
 import 'package:webspark_test_task/core/network/api_service.dart';
 import 'package:webspark_test_task/features/calculation/models/calculation_result.dart';
 import 'package:webspark_test_task/features/calculation/services/path_calculator.dart';
@@ -84,8 +85,12 @@ class _CalculationScreenState extends State<CalculationScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Results sent successfully')),
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              ResultsScreen(results: _results, tasks: widget.tasks),
+        ),
       );
     } catch (e) {
       if (!mounted) return;
