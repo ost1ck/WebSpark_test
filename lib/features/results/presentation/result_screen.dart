@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:webspark_test_task/features/calculation/models/calculation_result.dart';
+import 'package:webspark_test_task/features/results/presentation/result_detail_screen.dart';
 import 'package:webspark_test_task/features/url_input/models/path_task.dart';
 
 class ResultsScreen extends StatelessWidget {
@@ -16,12 +17,22 @@ class ResultsScreen extends StatelessWidget {
         itemCount: results.length,
         itemBuilder: (context, index) {
           final result = results[index];
+          final task = tasks[index];
 
           return Card(
             elevation: 3,
             margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             child: ListTile(
               title: Text(result.result.path, textAlign: TextAlign.center),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        ResultDetailScreen(result: result, task: task),
+                  ),
+                );
+              },
             ),
           );
         },
